@@ -1,193 +1,123 @@
 # AI Mirror Jury
 
-**Have a real conversation with a panel of diverse people — without scheduling a single interview.**
+A Claude skills library for running interactive conversations with a diverse panel of AI personas — on any question.
 
-AI Mirror Jury assembles a cohort of 5–10 AI personas drawn from a public dataset of 200,000+ real human profiles. You can talk to them one-on-one or ask the whole group a question at once. Each persona stays in character, remembers the conversation, and responds from their own background, values, and lived experience.
-
----
-
-## The idea
-
-When you need to understand how people will react to something — a price change, a policy, a product feature — you typically have two options: slow and expensive (user interviews, focus groups, surveys) or fast but shallow (asking a single AI to "think like a user").
-
-AI Mirror Jury is a third option. You get a demographically diverse panel assembled instantly. You can probe them with follow-up questions. They push back. They have opinions shaped by who they are, not just by what you asked.
+**Built by Li Chang** | Product × AI Practitioner
 
 ---
 
-## How it works
+## What It Does
 
-**1. You ask a question.**
-Any question — product, policy, business, social. The question determines which factual guardrails get loaded.
+You ask a question. A cohort of 5–10 diverse people gets assembled. You can speak to anyone on the panel one-on-one or ask the whole group at once. Their responses are grounded in verified facts — not hallucinated statistics. When you're ready, synthesize everything into patterns, consensus, divergence, and key takeaways.
 
-**2. A cohort of 5–10 personas is assembled.**
-Personas are sampled from [Persona-Hub](https://huggingface.co/datasets/proj-persona/PersonaHub), a public dataset of 200,000+ diverse human profiles (CC-BY 4.0). Each one has a distinct background, job, location, and set of values.
-
-**3. Verified facts are silently injected into each persona's context.**
-To prevent hallucination, relevant real-world data (sourced from government reports, peer-reviewed studies, and public research) is loaded into each persona's system prompt. Personas can reference these facts but cannot invent their own statistics. The user never sees this — it just keeps responses grounded.
-
-**4. You talk to them.**
-- **1-on-1**: Pick a persona by number. Have a multi-turn conversation. They remember everything you've said.
-- **Ask all**: Broadcast a single question and get independent responses from every persona at once.
+No surveys. No scheduling. No single AI opinion pretending to be many.
 
 ---
 
-## Quickstart
+## Skill Architecture
+
+```
+ai-mirror-jury/
+├── _context/
+│   ├── guardrails/     ← Verified facts by topic (anti-hallucination layer)
+│   └── personas/       ← Framework for diverse, believable cohorts
+├── jury/
+│   ├── assemble/       ← Question in → panel ready
+│   ├── speak-to/       ← 1-on-1 with any juror (conversation persists)
+│   ├── ask-all/        ← Broadcast to the whole panel
+│   └── synthesize/     ← Patterns, consensus, divergence, quotes
+└── _automations/
+    ├── workflows/
+    │   ├── full-session.md   ← End-to-end: assemble → ask-all → synthesize
+    │   └── deep-dive.md      ← 1-on-1 with everyone → synthesize
+    └── scripts/
+        └── session_manager.py
+```
+
+---
+
+## How to Use
+
+### Option 1 — Let Claude Code route for you
+Open this repo in Claude Code. Describe what you want and the right skill fires automatically:
+
+```
+"I want to explore how people would react to a 30% price increase"
+→ fires jury/assemble
+
+"speak to 3"
+→ fires jury/speak-to
+
+"ask everyone what the biggest risk is"
+→ fires jury/ask-all
+
+"what are the patterns"
+→ fires jury/synthesize
+
+"run a full session"
+→ fires _automations/workflows/full-session
+```
+
+### Option 2 — Run a workflow end-to-end
+Tell Claude Code to run `_automations/workflows/full-session.md` or `deep-dive.md` and it will walk through the entire session automatically.
+
+### Option 3 — Invoke skills manually
+Read any `SKILL.md` and follow it yourself inside a Claude conversation.
+
+---
+
+## The Guardrails Layer
+
+Personas don't have free rein to invent facts. Before any session, `_context/guardrails/SKILL.md` loads verified, sourced data for 9 topic domains:
+
+| Domain | Key sources |
+|---|---|
+| Work & Employment | BLS, ALDA, Autonomy Research |
+| Technology & AI | EU AI Act, Pew Research, McKinsey, Edelman |
+| Healthcare | OECD, KFF, NIMH, RAND |
+| Environment | EPA, WMO, EIA, NOAA |
+| Economics | BLS, Federal Reserve, SBA |
+| Product & Business | McKinsey, ProfitWell, Edelman, Nielsen |
+| Social Policy | US Census, CDC |
+| Education | Federal Reserve, College Board, NEA |
+| Criminal Justice | BJS, NIJ, ACLU |
+
+Personas may only cite facts from the loaded domain. If they don't know something, they say so — they don't invent it.
+
+**For specific events** (a real campaign, a company decision, a recent news story), supply your own context when assembling. It gets injected alongside the domain facts and takes highest priority.
+
+---
+
+## Session Commands
+
+Once a panel is assembled:
+
+| Command | What it does |
+|---|---|
+| `speak <N>` | Enter 1-on-1 mode with person N. Conversation history persists. |
+| `ask all` | Broadcast a message. Every persona responds independently. |
+| `list` | Show the panel again. |
+| `synthesize` | Extract patterns, consensus, divergence, and key quotes. |
+| `back` | Exit 1-on-1 mode and return to the panel menu. |
+
+---
+
+## Session State
+
+All skills share `_automations/state/session.json` (gitignored). Inspect or reset it:
 
 ```bash
-git clone https://github.com/li-xingchang/ai-mirror-jury
-cd ai-mirror-jury
-pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...
-
-# Launch the interactive session
-python -m mirror_jury
-```
-
-```
-==============================
-  AI MIRROR JURY
-  Hear from a diverse panel — on any question.
-==============================
-
-What question do you want to explore?
-> Should we raise our subscription price by 30%?
-
-How many people in your panel? (5–10, default 7): 6
-
-Assembling a panel of 6 people…
-Done.
-
-────────────────────────────────────────────────────────────
-  YOUR PANEL
-────────────────────────────────────────────────────────────
-  [1] A 34-year-old freelance graphic designer in Austin, TX.
-  [2] A 52-year-old retired school principal from rural Ohio.
-  [3] A 28-year-old startup founder based in New York City.
-  [4] A 67-year-old grandmother and part-time bookkeeper in Florida.
-  [5] A 41-year-old nurse practitioner in a Chicago suburb.
-  [6] A 23-year-old college student studying economics in California.
-────────────────────────────────────────────────────────────
-
-Commands:
-  speak <N>   — 1-on-1 with person N (conversation persists)
-  ask all     — Ask everyone the same question at once
-  list        — Show the panel again
-  help        — Show this menu
-  quit        — Exit
-
-> speak 3
-────────────────────────────────────────────────────────────
-  1-on-1 with person [3]
-  A 28-year-old startup founder based in New York City.
-  (type 'back' to return to the panel)
-────────────────────────────────────────────────────────────
-
-You: What's your gut reaction to a 30% price increase?
-[3]: Honestly, as a founder myself I've been on both sides of this.
-A 30% jump is aggressive — I'd need to see a real reason why...
-
-You: Would a new feature justify it?
-[3]: Depends entirely on the feature. If it saves me time or money,
-sure. But "we added AI" is not a reason to pay 30% more...
-
-You: back
-
-> ask all
-Your message to everyone: What one thing would make you accept a 30% price increase?
-
-[1] A 34-year-old freelance graphic designer in Austin, TX.
-  Honestly, if the product suddenly saved me 3 hours a week, I'd
-  pay it without thinking twice. But that bar is real...
-
-[2] A 52-year-old retired school principal from rural Ohio.
-  I'd need to know my data is safe and my account won't disappear.
-  Trust matters more to me than features at this point...
-...
+python _automations/scripts/session_manager.py            # show current state
+python _automations/scripts/session_manager.py --personas # list the panel
+python _automations/scripts/session_manager.py --reset    # start fresh
 ```
 
 ---
 
-## Python API
+## Design Principles
 
-```python
-from mirror_jury import MirrorJury, ResponseSummary
-
-# Assemble your panel
-jury = MirrorJury(
-    question="Should we launch in Europe or the US first?",
-    cohort_size=7,
-    seed=42,
-).assemble()
-
-# See who's in the panel
-for p in jury.list_personas():
-    print(f"[{p['index']}] {p['brief']}")
-
-# Multi-turn 1-on-1 conversation (history persists)
-r = jury.speak_to(1, "What's your gut reaction?")
-print(r.message)
-
-r = jury.speak_to(1, "What would change your mind?")
-print(r.message)
-
-# Ask everyone at once
-responses = jury.speak_to_all("What's the biggest risk of launching in Europe first?")
-ResponseSummary(responses).print_all()
-```
-
----
-
-## Bring your own personas
-
-Drop in any `.csv` or `.jsonl` file with a `description` or `persona` field:
-
-```python
-from mirror_jury import MirrorJury
-from mirror_jury.datasets import CustomFileDataset
-
-jury = MirrorJury(
-    question="...",
-    dataset=CustomFileDataset("my_personas.csv"),
-).assemble()
-```
-
----
-
-## Why personas stay grounded
-
-Free-form AI conversations carry a hallucination risk: a persona might invent a statistic, cite a study that doesn't exist, or confidently state something false to support their character's view.
-
-AI Mirror Jury addresses this with **contextual guardrails** — a silent layer of verified, sourced facts loaded into each persona's system prompt based on the topic of your question. Personas can reference these facts but are explicitly instructed not to invent statistics or cite sources beyond what's provided.
-
-The guardrails cover 9 topic domains (technology & AI, healthcare, work & employment, economics, environment, criminal justice, education, social policy, and product & business), each sourced from government data, peer-reviewed studies, and major public research. The user never sees them — they simply keep the conversation honest.
-
----
-
-## Dataset
-
-**[Persona-Hub](https://huggingface.co/datasets/proj-persona/PersonaHub)** (`proj-persona/PersonaHub`) — 200,000+ diverse human persona descriptions released by Microsoft Research under CC-BY 4.0. Downloaded automatically on first use via the HuggingFace `datasets` library and cached in `~/.cache/huggingface`.
-
----
-
-## Running tests
-
-```bash
-pip install pytest
-pytest
-```
-
-No API calls required to run the test suite.
-
----
-
-## Requirements
-
-- Python 3.11+
-- `ANTHROPIC_API_KEY` set in your environment
-- `pip install -r requirements.txt`
-
----
-
-## License
-
-MIT
+1. **Context before personas** — Guardrails load before any persona speaks.
+2. **Evidence, not imagination** — Personas reason from provided facts + personal values. No invented statistics.
+3. **Diversity is structural** — The persona framework enforces spread across age, occupation, geography, and worldview. Not left to chance.
+4. **Conversations persist** — 1-on-1 history is preserved. You can return to a persona and they remember what you discussed.
+5. **Synthesize last** — Run synthesis after you've gathered enough — not mid-session.

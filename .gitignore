@@ -1,12 +1,4 @@
-.env
+_automations/state/session.json
 __pycache__/
 *.py[cod]
-*.egg-info/
-dist/
-build/
-.venv/
-venv/
-.cache/
-.pytest_cache/
-*.log
-data/
+.env
