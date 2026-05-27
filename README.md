@@ -1,45 +1,33 @@
 # AI Mirror Jury
 
-**Run a focus group of 200,000 real-world personas in seconds — not weeks.**
+**Have a real conversation with a panel of diverse people — without scheduling a single interview.**
 
-AI Mirror Jury lets you ask any policy, product, or ethical question and instantly see how a diverse, demographically representative panel would respond — complete with individual reasoning, confidence scores, and multi-round deliberation.
+AI Mirror Jury assembles a cohort of 5–10 AI personas drawn from a public dataset of 200,000+ real human profiles. You can talk to them one-on-one or ask the whole group a question at once. Each persona stays in character, remembers the conversation, and responds from their own background, values, and lived experience.
 
 ---
 
-## The problem with AI opinion polling
+## The idea
 
-When you ask a single AI model "what do people think about X?", you get one averaged, sanitized answer. That's not useful. Real decisions — in policy, product design, journalism, research — require understanding the *distribution* of human opinion: who agrees, who resists, and why.
+When you need to understand how people will react to something — a price change, a policy, a product feature — you typically have two options: slow and expensive (user interviews, focus groups, surveys) or fast but shallow (asking a single AI to "think like a user").
 
-Traditional solutions are slow and expensive. A quality focus group takes weeks and costs thousands. A national poll requires weeks of fieldwork. AI Mirror Jury gives you a credible, diverse, grounded panel in under a minute.
+AI Mirror Jury is a third option. You get a demographically diverse panel assembled instantly. You can probe them with follow-up questions. They push back. They have opinions shaped by who they are, not just by what you asked.
 
 ---
 
 ## How it works
 
-```
-┌─────────────────────┐    ┌──────────────────────────────┐    ┌─────────────────────┐
-│  Public Dataset     │    │  AI Jurors                   │    │  Aggregated Result  │
-│                     │    │                              │    │                     │
-│  Persona-Hub        │───▶│  Each juror is a real-world  │───▶│  Position tally     │
-│  200k+ personas     │    │  persona from the dataset.   │    │  Majority verdict   │
-│  (CC-BY 4.0)        │    │  They reason from verified   │    │  Confidence score   │
-│                     │    │  facts — not hallucinations. │    │  Individual quotes  │
-└─────────────────────┘    └──────────────────────────────┘    └─────────────────────┘
-         │                            │
-         │  Sample N personas         │  Optionally run deliberation:
-         │  to form jury              │  jurors see each other's reasoning
-         │                            │  and may update their position
-```
+**1. You ask a question.**
+Any question — product, policy, business, social. The question determines which factual guardrails get loaded.
 
-**1. Load personas** from [Persona-Hub](https://huggingface.co/datasets/proj-persona/PersonaHub) — 200,000+ diverse human profiles spanning age, occupation, location, values, and lived experience. Licensed CC-BY 4.0, freely available on HuggingFace.
+**2. A cohort of 5–10 personas is assembled.**
+Personas are sampled from [Persona-Hub](https://huggingface.co/datasets/proj-persona/PersonaHub), a public dataset of 200,000+ diverse human profiles (CC-BY 4.0). Each one has a distinct background, job, location, and set of values.
 
-**2. Anchor to facts** — every Case comes with sourced, verified facts. Jurors are instructed to reason *only* from these facts plus their personal values. No hallucinated statistics.
+**3. Verified facts are silently injected into each persona's context.**
+To prevent hallucination, relevant real-world data (sourced from government reports, peer-reviewed studies, and public research) is loaded into each persona's system prompt. Personas can reference these facts but cannot invent their own statistics. The user never sees this — it just keeps responses grounded.
 
-**3. Poll in parallel** — each juror deliberates independently via the Claude API with prompt caching on their persona, keeping costs low.
-
-**4. Deliberate** *(optional)* — in round 2, jurors see each other's reasoning. They may update their position or dig in. Mirrors how real jury deliberation works.
-
-**5. Aggregate** — get a tally, majority verdict, average confidence, and the full text of each juror's reasoning.
+**4. You talk to them.**
+- **1-on-1**: Pick a persona by number. Have a multi-turn conversation. They remember everything you've said.
+- **Ask all**: Broadcast a single question and get independent responses from every persona at once.
 
 ---
 
@@ -49,150 +37,135 @@ Traditional solutions are slow and expensive. A quality focus group takes weeks 
 git clone https://github.com/li-xingchang/ai-mirror-jury
 cd ai-mirror-jury
 pip install -r requirements.txt
-
 export ANTHROPIC_API_KEY=sk-ant-...
 
-# Single-round verdict on a pre-built scenario
-python examples/basic_verdict.py
-
-# Two-round deliberation
-python examples/deliberation.py
-
-# Run all 6 built-in scenarios
-python examples/run_all_scenarios.py
-
-# Your own personas + your own question
-python examples/custom_dataset.py --file personas.csv --question "Should we launch this feature?"
+# Launch the interactive session
+python -m mirror_jury
 ```
 
----
-
-## Built-in scenarios
-
-Every scenario includes real, sourced facts so jurors can't fabricate supporting evidence.
-
-| Scenario | Key facts sourced from |
-|---|---|
-| `FOUR_DAY_WORK_WEEK` | Iceland trial (ALDA 2021), UK pilot (Autonomy 2023), BLS |
-| `AI_REGULATION` | EU AI Act, Biden EO, Pew Research, NCSL |
-| `SOCIAL_MEDIA_AGE_LIMITS` | Australian Online Safety Act, JAMA Pediatrics, Surgeon General |
-| `UNIVERSAL_BASIC_INCOME` | Stockton SEED study, Finnish UBI trial, CBO, Alaska PFD |
-| `CRIMINAL_SENTENCING_REFORM` | BJS federal prison data, First Step Act, ACLU, NIJ |
-| `CLIMATE_CARBON_TAX` | Canada carbon price, EPA inventory, IMF working paper, CBO |
-
-```python
-from mirror_jury.scenarios import AI_REGULATION, ALL_SCENARIOS
 ```
+==============================
+  AI MIRROR JURY
+  Hear from a diverse panel — on any question.
+==============================
 
----
+What question do you want to explore?
+> Should we raise our subscription price by 30%?
 
-## Sample output
+How many people in your panel? (5–10, default 7): 6
 
-```
-==================================================
-JURY VERDICT  (8 jurors)
-==================================================
-  yes, with guardrails          4 /  8  (50%)
-  no, self-regulation           2 /  8  (25%)
-  yes, for highest-risk only    2 /  8  (25%)
+Assembling a panel of 6 people…
+Done.
 
-Majority position : yes, with guardrails
-Avg confidence    : 0.71
-==================================================
+────────────────────────────────────────────────────────────
+  YOUR PANEL
+────────────────────────────────────────────────────────────
+  [1] A 34-year-old freelance graphic designer in Austin, TX.
+  [2] A 52-year-old retired school principal from rural Ohio.
+  [3] A 28-year-old startup founder based in New York City.
+  [4] A 67-year-old grandmother and part-time bookkeeper in Florida.
+  [5] A 41-year-old nurse practitioner in a Chicago suburb.
+  [6] A 23-year-old college student studying economics in California.
+────────────────────────────────────────────────────────────
 
-INDIVIDUAL VERDICTS:
+Commands:
+  speak <N>   — 1-on-1 with person N (conversation persists)
+  ask all     — Ask everyone the same question at once
+  list        — Show the panel again
+  help        — Show this menu
+  quit        — Exit
 
-[ph_0003] yes, with guardrails (82% confident)
-  As a small business owner I've seen how unregulated tech can create unfair advantages.
-  The EU AI Act shows it's possible without killing innovation — I'd want the same here.
+> speak 3
+────────────────────────────────────────────────────────────
+  1-on-1 with person [3]
+  A 28-year-old startup founder based in New York City.
+  (type 'back' to return to the panel)
+────────────────────────────────────────────────────────────
 
-[ph_0011] no, self-regulation (65% confident)
-  Government moves too slowly. By the time Congress acts, the technology will have changed
-  completely. I'd rather see industry standards led by the labs themselves.
+You: What's your gut reaction to a 30% price increase?
+[3]: Honestly, as a founder myself I've been on both sides of this.
+A 30% jump is aggressive — I'd need to see a real reason why...
+
+You: Would a new feature justify it?
+[3]: Depends entirely on the feature. If it saves me time or money,
+sure. But "we added AI" is not a reason to pay 30% more...
+
+You: back
+
+> ask all
+Your message to everyone: What one thing would make you accept a 30% price increase?
+
+[1] A 34-year-old freelance graphic designer in Austin, TX.
+  Honestly, if the product suddenly saved me 3 hours a week, I'd
+  pay it without thinking twice. But that bar is real...
+
+[2] A 52-year-old retired school principal from rural Ohio.
+  I'd need to know my data is safe and my account won't disappear.
+  Trust matters more to me than features at this point...
 ...
 ```
 
 ---
 
-## Code API
+## Python API
 
 ```python
-from mirror_jury import Case, JuryPanel, Deliberation, JuryAggregator
-from mirror_jury.datasets import PersonaHubDataset
-from mirror_jury.scenarios import FOUR_DAY_WORK_WEEK
+from mirror_jury import MirrorJury, ResponseSummary
 
-# Use a built-in scenario (facts already sourced)
-case = FOUR_DAY_WORK_WEEK
+# Assemble your panel
+jury = MirrorJury(
+    question="Should we launch in Europe or the US first?",
+    cohort_size=7,
+    seed=42,
+).assemble()
 
-# Or build your own with grounding facts
-case = Case(
-    question="Should we require calorie labels on alcohol?",
-    context="The FDA is considering mandatory calorie labeling for beer, wine, and spirits.",
-    facts=[
-        "A standard 5oz glass of wine contains ~120 calories.",
-        "The US requires calorie labels on most packaged foods but not alcohol.",
-        "A 2021 JAMA study found calorie labels on menus reduced fast food orders by ~8%.",
-    ],
-    sources=["FDA Alcohol Labeling Rulemaking, 2023", "JAMA, 'Menu Labeling Effects,' 2021"],
-    options=["Yes, require labels", "No, keep voluntary"],
-)
+# See who's in the panel
+for p in jury.list_personas():
+    print(f"[{p['index']}] {p['brief']}")
 
-# Seat a jury
-dataset = PersonaHubDataset(seed=42)
-panel = JuryPanel(dataset=dataset, size=12, max_workers=4).seat()
+# Multi-turn 1-on-1 conversation (history persists)
+r = jury.speak_to(1, "What's your gut reaction?")
+print(r.message)
 
-# Single-round verdict
-verdicts = panel.poll(case)
+r = jury.speak_to(1, "What would change your mind?")
+print(r.message)
 
-# Or multi-round deliberation
-deliberation = Deliberation(panel=panel, rounds=2)
-all_rounds = deliberation.run(case)
-verdicts = Deliberation.final_verdicts(all_rounds)
-
-# Report
-agg = JuryAggregator(verdicts)
-print(agg.report())           # tally + majority
-print(agg.detailed_report())  # + each juror's full reasoning
+# Ask everyone at once
+responses = jury.speak_to_all("What's the biggest risk of launching in Europe first?")
+ResponseSummary(responses).print_all()
 ```
 
 ---
 
-## Why answers stay grounded
+## Bring your own personas
 
-The biggest risk in LLM-powered simulations is **hallucination** — jurors inventing statistics, citing studies that don't exist, or confidently stating false facts as justification.
+Drop in any `.csv` or `.jsonl` file with a `description` or `persona` field:
 
-AI Mirror Jury prevents this with three layers:
+```python
+from mirror_jury import MirrorJury
+from mirror_jury.datasets import CustomFileDataset
 
-1. **Sourced facts in every Case** — the `facts` field contains verified, cited data points. Every built-in scenario is sourced from government reports, peer-reviewed studies, or major news investigations.
-
-2. **Explicit grounding instruction** — every juror's prompt includes: *"Do NOT invent statistics, cite studies, or reference events not listed in the facts. If uncertain, express that rather than fabricating details."*
-
-3. **Persona-only reasoning** — jurors are instructed to combine the provided facts with their *personal values and lived experience*, not general knowledge. This keeps responses authentic to their character without opening the door to fabrication.
-
----
-
-## Key classes
-
-| Class | Description |
-|---|---|
-| `Case` | Question + context + **sourced facts** + optional answer choices |
-| `Persona` | A single juror profile from the dataset |
-| `Juror` | Claude-backed juror; returns a `Verdict` with position, reasoning, confidence |
-| `JuryPanel` | Samples personas, seats jurors, polls them in parallel |
-| `Deliberation` | Multi-round loop; jurors react to each other's reasoning |
-| `JuryAggregator` | Tallies positions, finds majority, formats reports |
-| `PersonaHubDataset` | Loads from Persona-Hub on HuggingFace (auto-cached) |
-| `CustomFileDataset` | Loads from a local `.csv` or `.jsonl` file |
+jury = MirrorJury(
+    question="...",
+    dataset=CustomFileDataset("my_personas.csv"),
+).assemble()
+```
 
 ---
 
-## Use cases
+## Why personas stay grounded
 
-- **Policy research** — gauge how different demographic groups respond to a proposed law before it's introduced
-- **Product decisions** — simulate how your target users would react to a new feature or pricing change
-- **Journalism** — give diverse voices to a story before interviews are complete
-- **Education** — run classroom simulations of real public debates with grounded evidence
-- **Ethics review** — surface how different communities would be affected by an AI system's decisions
+Free-form AI conversations carry a hallucination risk: a persona might invent a statistic, cite a study that doesn't exist, or confidently state something false to support their character's view.
+
+AI Mirror Jury addresses this with **contextual guardrails** — a silent layer of verified, sourced facts loaded into each persona's system prompt based on the topic of your question. Personas can reference these facts but are explicitly instructed not to invent statistics or cite sources beyond what's provided.
+
+The guardrails cover 9 topic domains (technology & AI, healthcare, work & employment, economics, environment, criminal justice, education, social policy, and product & business), each sourced from government data, peer-reviewed studies, and major public research. The user never sees them — they simply keep the conversation honest.
+
+---
+
+## Dataset
+
+**[Persona-Hub](https://huggingface.co/datasets/proj-persona/PersonaHub)** (`proj-persona/PersonaHub`) — 200,000+ diverse human persona descriptions released by Microsoft Research under CC-BY 4.0. Downloaded automatically on first use via the HuggingFace `datasets` library and cached in `~/.cache/huggingface`.
 
 ---
 
@@ -203,23 +176,15 @@ pip install pytest
 pytest
 ```
 
-All core logic is tested without API calls.
+No API calls required to run the test suite.
 
 ---
 
 ## Requirements
 
 - Python 3.11+
-- `ANTHROPIC_API_KEY` environment variable
-- `pip install -r requirements.txt` installs `anthropic` and `datasets`
-
----
-
-## Dataset
-
-**Persona-Hub** (`proj-persona/PersonaHub`) — a public dataset of 200,000+ diverse human persona descriptions, released by Microsoft Research under the Creative Commons Attribution 4.0 license. Downloaded automatically on first use and cached in `~/.cache/huggingface/`.
-
-Bring your own personas with `CustomFileDataset` — any `.csv` or `.jsonl` with a `description` or `persona` column works.
+- `ANTHROPIC_API_KEY` set in your environment
+- `pip install -r requirements.txt`
 
 ---
 

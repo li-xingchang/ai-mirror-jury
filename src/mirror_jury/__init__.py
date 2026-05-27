@@ -1,21 +1,25 @@
-"""AI Mirror Jury — simulate how a diverse panel of people would respond to any question."""
+"""
+AI Mirror Jury — interactive conversations with a diverse panel of AI personas.
 
-from mirror_jury.core import Case, Persona, Verdict
+Quickstart:
+    jury = MirrorJury("Should we raise prices by 30%?").assemble()
+    response = jury.speak_to(1, "What's your gut reaction?")
+    responses = jury.speak_to_all("What's the biggest risk?")
+"""
+
+from mirror_jury.core import Persona, Response
 from mirror_jury.datasets import BaseDataset, CustomFileDataset, PersonaHubDataset
-from mirror_jury.jury import Deliberation, Juror, JuryPanel
-from mirror_jury.analysis import JuryAggregator
-from mirror_jury.scenarios import ALL_SCENARIOS
+from mirror_jury.session import ConversationalJuror, Cohort, MirrorJury
+from mirror_jury.analysis import ResponseSummary
 
 __all__ = [
-    "Case",
     "Persona",
-    "Verdict",
+    "Response",
     "BaseDataset",
     "PersonaHubDataset",
     "CustomFileDataset",
-    "Juror",
-    "JuryPanel",
-    "Deliberation",
-    "JuryAggregator",
-    "ALL_SCENARIOS",
+    "ConversationalJuror",
+    "Cohort",
+    "MirrorJury",
+    "ResponseSummary",
 ]

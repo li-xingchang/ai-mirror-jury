@@ -1,15 +1,14 @@
 """
-Use your own persona data (CSV or JSONL) instead of Persona-Hub.
+Use your own persona file instead of Persona-Hub.
 
-Your file needs at least a "description" or "persona" column/field.
+Your CSV or JSONL must have a "description" or "persona" column/field.
 
-Example CSV:
+Example CSV row:
   id,description
   p1,"A 45-year-old farmer from rural Iowa who values tradition and community."
-  p2,"A 28-year-old software engineer in San Francisco who cares about open-source."
 
 Usage:
-    export ANTHROPIC_API_KEY=sk-...
+    export ANTHROPIC_API_KEY=sk-ant-...
     python examples/custom_dataset.py --file path/to/personas.csv
 """
 
@@ -19,19 +18,21 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from mirror_jury import Case, JuryPanel, JuryAggregator
+from mirror_jury import MirrorJury, ResponseSummary
 from mirror_jury.datasets import CustomFileDataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--file", required=True, help="Path to .csv or .jsonl persona file")
-parser.add_argument("--question", default="Should AI be regulated by the government?")
-parser.add_argument("--size", type=int, default=6)
+parser.add_argument("--question", default="Should we expand to a new market this year?")
+parser.add_argument("--size", type=int, default=5)
 args = parser.parse_args()
 
-case = Case(question=args.question)
-dataset = CustomFileDataset(path=args.file)
-panel = JuryPanel(dataset=dataset, size=args.size).seat()
-verdicts = panel.poll(case)
+jury = MirrorJury(
+    question=args.question,
+    cohort_size=args.size,
+    dataset=CustomFileDataset(args.file),
+).assemble()
 
-agg = JuryAggregator(verdicts)
-print(agg.detailed_report())
+print(f"\nQuestion: {args.question}\n")
+responses = jury.speak_to_all(args.question)
+ResponseSummary(responses).print_all()

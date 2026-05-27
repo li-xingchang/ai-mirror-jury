@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Load personas from any local CSV / JSONL file, or from a HuggingFace dataset path.
 

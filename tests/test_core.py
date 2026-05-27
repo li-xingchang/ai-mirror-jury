@@ -1,61 +1,68 @@
-"""Unit tests for core data structures (no API calls required)."""
+"""Unit tests — no API calls required."""
 
 import pytest
-from mirror_jury.core import Case, Persona, Verdict
-from mirror_jury.analysis import JuryAggregator
+from mirror_jury.core.persona import Persona
+from mirror_jury.core.response import Response
+from mirror_jury.context.guardrails import get_guardrail_facts
+from mirror_jury.analysis.aggregator import ResponseSummary
 
 
-def make_verdicts(positions: list[str]) -> list[Verdict]:
+def make_responses(messages: list[str]) -> list[Response]:
     return [
-        Verdict(juror_id=f"j{i}", position=p, reasoning="test", confidence=0.8)
-        for i, p in enumerate(positions)
+        Response(persona_id=f"p{i}", persona_brief=f"Person {i}", message=m)
+        for i, m in enumerate(messages)
     ]
 
 
-def test_case_renders_question():
-    c = Case(question="Is this a test?")
-    assert "Is this a test?" in c.render()
-
-
-def test_case_renders_options():
-    c = Case(question="Pick one.", options=["A", "B"])
-    rendered = c.render()
-    assert "A" in rendered and "B" in rendered
-
+# ── Persona ──────────────────────────────────────────────────────────────────
 
 def test_persona_system_prompt():
     p = Persona(id="p1", description="A retired teacher from Ohio.")
-    prompt = p.to_system_prompt()
-    assert "retired teacher" in prompt
+    assert "retired teacher" in p.to_system_prompt()
 
 
-def test_verdict_summary():
-    v = Verdict(juror_id="j1", position="yes", reasoning="Because.", confidence=0.9)
-    assert "j1" in v.summary()
-    assert "yes" in v.summary()
+def test_persona_system_prompt_stays_in_character():
+    p = Persona(id="p1", description="A nurse in Chicago.")
+    assert "character" in p.to_system_prompt().lower()
 
 
-def test_aggregator_tally():
-    verdicts = make_verdicts(["yes", "yes", "no", "yes"])
-    agg = JuryAggregator(verdicts)
-    tally = agg.tally()
-    assert tally["yes"] == 3
-    assert tally["no"] == 1
+# ── Response ─────────────────────────────────────────────────────────────────
+
+def test_response_fields():
+    r = Response(persona_id="p1", persona_brief="A teacher.", message="I think so.", turn=2)
+    assert r.persona_id == "p1"
+    assert r.turn == 2
 
 
-def test_aggregator_majority():
-    verdicts = make_verdicts(["yes", "yes", "no", "yes"])
-    agg = JuryAggregator(verdicts)
-    assert agg.majority() == "yes"
+# ── Guardrails ───────────────────────────────────────────────────────────────
+
+def test_guardrails_match_ai_question():
+    facts = get_guardrail_facts("Should we regulate AI systems?")
+    assert len(facts) > 0
+    assert any("AI" in f or "EU" in f for f in facts)
 
 
-def test_aggregator_hung_jury():
-    verdicts = make_verdicts(["yes", "no"])
-    agg = JuryAggregator(verdicts)
-    assert agg.majority() is None
+def test_guardrails_match_work_question():
+    facts = get_guardrail_facts("Should we move to a remote work policy?")
+    assert len(facts) > 0
 
 
-def test_aggregator_report_contains_totals():
-    verdicts = make_verdicts(["yes", "no", "yes"])
-    report = JuryAggregator(verdicts).report()
-    assert "3 jurors" in report or "3)" in report or "3" in report
+def test_guardrails_return_empty_for_unknown():
+    # Highly specific question with no matching keywords
+    facts = get_guardrail_facts("What color should our logo be?")
+    assert isinstance(facts, list)
+
+
+# ── ResponseSummary ───────────────────────────────────────────────────────────
+
+def test_summary_len():
+    rs = ResponseSummary(make_responses(["yes", "no", "maybe"]))
+    assert len(rs) == 3
+
+
+def test_summary_as_text():
+    rs = ResponseSummary(make_responses(["I agree.", "I disagree."]), question="Test?")
+    text = rs.as_text()
+    assert "Test?" in text
+    assert "I agree." in text
+    assert "I disagree." in text

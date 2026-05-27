@@ -1,53 +1,35 @@
-"""Aggregate and summarise jury verdicts."""
+from __future__ import annotations
+"""Format and display a set of responses from a speak_to_all call."""
 
-from collections import Counter
+import textwrap
 
-from mirror_jury.core.verdict import Verdict
+from mirror_jury.core.response import Response
 
 
-class JuryAggregator:
-    def __init__(self, verdicts: list[Verdict]):
-        self._verdicts = verdicts
+class ResponseSummary:
+    def __init__(self, responses: list[Response], question: str = ""):
+        self._responses = responses
+        self.question = question
 
-    def tally(self) -> dict[str, int]:
-        """Count occurrences of each position."""
-        return dict(Counter(v.position.lower() for v in self._verdicts))
+    def __len__(self) -> int:
+        return len(self._responses)
 
-    def majority(self) -> str | None:
-        """Return the position held by more than half the jury, or None."""
-        tally = self.tally()
-        total = len(self._verdicts)
-        for position, count in tally.items():
-            if count / total > 0.5:
-                return position
-        return None
+    def print_all(self, width: int = 72) -> None:
+        if self.question:
+            print(f"\nQuestion: {self.question}")
+        print(f"{'─' * width}")
+        for r in self._responses:
+            print(f"\n{r.persona_brief}")
+            print(textwrap.fill(r.message, width=width, initial_indent="  ", subsequent_indent="  "))
+        print(f"\n{'─' * width}")
 
-    def average_confidence(self) -> float:
-        if not self._verdicts:
-            return 0.0
-        return sum(v.confidence for v in self._verdicts) / len(self._verdicts)
-
-    def report(self) -> str:
-        tally = self.tally()
-        majority = self.majority()
-        avg_conf = self.average_confidence()
-        total = len(self._verdicts)
-
-        lines = [
-            "=" * 50,
-            f"JURY VERDICT  ({total} jurors)",
-            "=" * 50,
-        ]
-        for position, count in sorted(tally.items(), key=lambda x: -x[1]):
-            pct = int(count / total * 100)
-            lines.append(f"  {position:<25} {count:>3} / {total}  ({pct}%)")
-        lines.append(f"\nMajority position : {majority or 'hung jury'}")
-        lines.append(f"Avg confidence    : {avg_conf:.2f}")
-        lines.append("=" * 50)
-        return "\n".join(lines)
-
-    def detailed_report(self) -> str:
-        lines = [self.report(), "\nINDIVIDUAL VERDICTS:"]
-        for v in sorted(self._verdicts, key=lambda x: x.juror_id):
-            lines.append(f"\n{v.summary()}")
+    def as_text(self, width: int = 72) -> str:
+        lines = []
+        if self.question:
+            lines.append(f"Question: {self.question}")
+        lines.append("─" * width)
+        for r in self._responses:
+            lines.append(f"\n{r.persona_brief}")
+            lines.append(textwrap.fill(r.message, width=width, initial_indent="  ", subsequent_indent="  "))
+        lines.append("─" * width)
         return "\n".join(lines)

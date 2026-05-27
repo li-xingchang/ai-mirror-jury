@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 Loader for the Persona-Hub dataset.
 

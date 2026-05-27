@@ -1,3 +1,3 @@
-from .aggregator import JuryAggregator
+from .aggregator import ResponseSummary
 
-__all__ = ["JuryAggregator"]
+__all__ = ["ResponseSummary"]
