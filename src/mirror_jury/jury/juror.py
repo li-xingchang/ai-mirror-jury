@@ -19,11 +19,19 @@ def _client() -> anthropic.Anthropic:
     return _CLIENT
 
 
+_GROUNDING_INSTRUCTION = """\
+IMPORTANT RULES FOR YOUR RESPONSE:
+- Draw ONLY on the verified facts provided above and your own personal values, \
+emotions, and lived experience as described in your character.
+- Do NOT invent statistics, cite studies, or reference events not listed in the facts.
+- If you are uncertain, express that uncertainty rather than fabricating details.
+- Speak in first person as yourself — not as a policy analyst or neutral observer."""
+
 _VERDICT_SCHEMA = """\
 Respond with valid JSON only — no markdown fences, no extra text:
 {
-  "position": "<your clear stance or answer>",
-  "reasoning": "<2-3 sentences explaining your view from your personal perspective>",
+  "position": "<your clear stance or answer in plain language>",
+  "reasoning": "<2-3 sentences from your personal perspective, citing only facts provided>",
   "confidence": <number between 0.0 and 1.0>
 }"""
 
@@ -44,7 +52,7 @@ class Juror:
                 {
                     "type": "text",
                     "text": self.persona.to_system_prompt(),
-                    # Cache the persona — it never changes across rounds
+                    # Cache the persona — unchanged across deliberation rounds
                     "cache_control": {"type": "ephemeral"},
                 }
             ],
@@ -56,6 +64,7 @@ class Juror:
 
     def _build_messages(self, case: Case, prior_verdicts: list[Verdict] | None) -> list[dict]:
         user_text = case.render()
+        user_text += f"\n\n{_GROUNDING_INSTRUCTION}"
 
         if prior_verdicts:
             others = "\n".join(
@@ -65,7 +74,8 @@ class Juror:
             )
             user_text += (
                 f"\n\nYour fellow jurors have shared their views:\n{others}\n\n"
-                "You may update your position or hold firm — but explain your reasoning."
+                "You may update your position or hold firm — but stay grounded in "
+                "the verified facts and your own values. Explain your reasoning."
             )
 
         user_text += f"\n\n{_VERDICT_SCHEMA}"
